@@ -356,11 +356,6 @@ public class LivesManager : MonoBehaviour
             gameOverPanel.SetActive(false);
         }
 
-        //if (winTextObject != null)
-        //{
-        //    winTextObject.SetActive(false);
-        //}
-
         // Create frog icons in UI
         CreateFrogIcons();
         UpdateUI();
@@ -455,7 +450,6 @@ public class LivesManager : MonoBehaviour
             gameOverPanel.SetActive(false);
         }
 
-        Debug.Log("Player won the game!");
         UpdateUI();
     }
 
@@ -469,11 +463,6 @@ public class LivesManager : MonoBehaviour
         {
             gameOverPanel.SetActive(false);
         }
-
-        //if (winTextObject != null)
-        //{
-        //    winTextObject.SetActive(false);
-        //}
 
         // Recreate frog icons
         CreateFrogIcons();
@@ -503,12 +492,6 @@ public class LivesManager : MonoBehaviour
     {
         // Update frog icons
         UpdateFrogIcons();
-
-        // Update win text
-        //if (winTextObject != null)
-        //{
-        //    winTextObject.SetActive(HasWon);
-        //}
 
         // Fire events
         OnLivesChanged?.Invoke(currentLives);

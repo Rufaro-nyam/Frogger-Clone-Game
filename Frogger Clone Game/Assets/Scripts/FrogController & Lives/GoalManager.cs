@@ -15,7 +15,10 @@ public class GoalManager : MonoBehaviour
     [Tooltip("Shown when all 5 goal slots are filled.")]
     [SerializeField] private GameObject winPanel;
 
-    // Goal cell -> filled state. Built automatically from GridManager's
+
+    [SerializeField] private FrogController frogController;
+
+    // Goal cell - filled state. Built automatically from GridManager's
     // configured rows, so the 5 slots never need to be re-typed here.
     private Dictionary<Vector2Int, bool> goalSlots = new Dictionary<Vector2Int, bool>();
 
@@ -35,6 +38,11 @@ public class GoalManager : MonoBehaviour
         if (gridManager == null)
         {
             gridManager = FindObjectOfType<GridManager>();
+        }
+
+        if (frogController == null)
+        {
+            frogController = FindObjectOfType<FrogController>();
         }
     }
 
@@ -62,6 +70,12 @@ public class GoalManager : MonoBehaviour
         }
 
         Debug.Log($"GoalManager: tracking {goalSlots.Count} goal slot(s)");
+
+        if (frogController == null)
+        {
+            frogController = FindObjectOfType<FrogController>();
+            Debug.LogWarning("GoalManager: FrogController not assigned, will try to find it.");
+        }
     }
 
     // Attempts to fill the goal slot at the given grid position.
@@ -130,6 +144,27 @@ public class GoalManager : MonoBehaviour
 
         if (winPanel != null)
         {
+            // Disable the frog when all goals are filled
+            if (frogController != null)
+            {
+                // Try to call DisableFrog if it exists
+                var disableMethod = frogController.GetType().GetMethod("DisableFrog");
+                if (disableMethod != null)
+                {
+                    disableMethod.Invoke(frogController, null);
+                    Debug.Log("GoalManager: Disabled frog via reflection");
+                }
+                else
+                {
+                    // Alternative: deactivate the entire GameObject
+                    frogController.gameObject.SetActive(false);
+                    Debug.Log("GoalManager: Deactivated frog GameObject");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("GoalManager: No FrogController reference - cannot disable frog!");
+            }
             winPanel.SetActive(true);
         }
 
