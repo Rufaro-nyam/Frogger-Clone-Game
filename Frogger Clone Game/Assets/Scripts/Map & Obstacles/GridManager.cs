@@ -6,8 +6,8 @@ using static LaneTypes;
 public class GridManager : MonoBehaviour
 {
     [Header("Grid Settings")]
-    [SerializeField] private int width = 9;
-    [SerializeField] private int height = 10;
+    [SerializeField] public int width = 9;
+    [SerializeField] public int height = 10;
     [SerializeField] private float cellSize = 1f;
 
     [Header("Map Rows")]
