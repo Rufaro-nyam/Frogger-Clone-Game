@@ -13,6 +13,14 @@ public class GridManager : MonoBehaviour
     [Header("Map Rows")]
     [SerializeField] private GridRow[] rows;
 
+    [Header("Debug Markers")]
+    [SerializeField] private GameObject gridMarkerPrefab;
+
+    private void Start()
+    {
+        CreateGridMarkers();
+    }
+
     public Vector2 GetWorldPosition(int x, int y)
     {
         float xOffset = (width - 1) * cellSize / 2f;
@@ -172,6 +180,24 @@ public class GridManager : MonoBehaviour
                     position,
                     cellSize * 0.15f
                 );
+            }
+        }
+    }
+
+    private void CreateGridMarkers()
+    {
+        if (gridMarkerPrefab == null)
+        {
+            return;
+        }
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                Vector2 position = GetWorldPosition(x, y);
+
+                Instantiate(gridMarkerPrefab, position, Quaternion.identity, transform);
             }
         }
     }

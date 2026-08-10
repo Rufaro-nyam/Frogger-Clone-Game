@@ -319,7 +319,7 @@ Transform:
   m_GameObject: {fileID: 212303064}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.28, y: 3.68, z: -0.046902042}
+  m_LocalPosition: {x: -0.28, y: 3.71, z: -0.046902042}
   m_LocalScale: {x: 15, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1466,6 +1466,7 @@ MonoBehaviour:
     positions: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
   - laneType: 3
     positions: 020000000300000002000000020000000300000002000000020000000300000002000000020000000300000002000000020000000300000002000000
+  gridMarkerPrefab: {fileID: 364220421488114398, guid: 1405829131ed6b24ead83b91485517dd, type: 3}
 --- !u!1 &1897982809
 GameObject:
   m_ObjectHideFlags: 0
