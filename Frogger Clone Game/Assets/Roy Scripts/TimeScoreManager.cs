@@ -6,7 +6,11 @@ public class TimeScoreManager : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private Image timeBarImage;
-    [SerializeField] private TextMeshProUGUI scoreText; // TextMeshPro component showing purely the score number
+    [SerializeField] private TextMeshProUGUI scoreText;
+
+    [Header("Game References")]
+    [SerializeField] private FrogController frogController;
+    [SerializeField] private GoalManager goalManager;
 
     [Header("Timer Settings")]
     [Tooltip("Total duration in seconds for the round.")]
@@ -26,21 +30,51 @@ public class TimeScoreManager : MonoBehaviour
     private bool isTimerRunning = false;
     private int currentTotalScore = 0;
 
+    // State tracking variables
+    private int lastFilledSlots = 0;
+    private Vector2Int lastFrogPosition;
+
     public int CurrentTotalScore => currentTotalScore;
 
     private void Start()
     {
+        // Auto-find references if not set in Inspector
+        if (frogController == null)
+            frogController = FindObjectOfType<FrogController>();
+
+        if (goalManager == null)
+            goalManager = FindObjectOfType<GoalManager>();
+
+        if (goalManager != null)
+            lastFilledSlots = goalManager.FilledSlots;
+
+        if (frogController != null)
+            lastFrogPosition = frogController.CurrentGridPosition;
+
         UpdateScoreUI();
         ResetTimer();
     }
 
     private void Update()
     {
-        // Testing trigger: Press R to simulate reaching the end goal
+        // 1. Check if the game state is over (Win or Game Over)
+        if (IsGameFinished())
+        {
+            if (isTimerRunning)
+            {
+                StopTimer();
+                DisableTimeBar();
+            }
+            return; // Halt timer processing completely
+        }
+
+        // Debug key for goal testing
         if (Input.GetKeyDown(KeyCode.R))
         {
             ReachGoal();
         }
+
+        DetectPlayerEvents();
 
         if (!isTimerRunning) return;
 
@@ -57,14 +91,73 @@ public class TimeScoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Called when the player successfully reaches a goal slot.
-    /// Calculates points based on remaining time, adds to total, and resets timer for next goal.
+    /// Returns true if either a Game Over or Win condition has been met in LivesManager.
+    /// </summary>
+    private bool IsGameFinished()
+    {
+        if (LivesManager.Instance != null)
+        {
+            return LivesManager.Instance.IsGameOver || LivesManager.Instance.HasWon;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Disables the time bar visual UI component when the game ends.
+    /// </summary>
+    private void DisableTimeBar()
+    {
+        if (timeBarImage != null && timeBarImage.gameObject.activeSelf)
+        {
+            timeBarImage.gameObject.SetActive(false);
+            Debug.Log("TimeScoreManager: Game finished. Time bar UI disabled.");
+        }
+    }
+
+    /// <summary>
+    /// Monitors GoalManager slots and FrogController position for goals and deaths.
+    /// </summary>
+    private void DetectPlayerEvents()
+    {
+        // Goal Reached Detection
+        if (goalManager != null)
+        {
+            if (goalManager.FilledSlots > lastFilledSlots)
+            {
+                lastFilledSlots = goalManager.FilledSlots;
+                ReachGoal();
+
+                if (frogController != null)
+                    lastFrogPosition = frogController.CurrentGridPosition;
+
+                return;
+            }
+        }
+
+        // Death / Respawn Detection
+        if (frogController != null)
+        {
+            Vector2Int currentPos = frogController.CurrentGridPosition;
+
+            bool respawnedAtStart = (currentPos.y == 0 && lastFrogPosition.y > 0 && !frogController.IsMoving);
+
+            if (respawnedAtStart && !IsGameFinished())
+            {
+                Debug.Log("TimeScoreManager: Player death detected. Resetting timer.");
+                ResetTimer();
+            }
+
+            lastFrogPosition = currentPos;
+        }
+    }
+
+    /// <summary>
+    /// Awards score for reaching a goal slot and resets the timer for the next run.
     /// </summary>
     public void ReachGoal()
     {
         if (!isTimerRunning) return;
 
-        // Calculate time bonus: remaining seconds multiplied by points rate
         int timeBonus = Mathf.FloorToInt(currentTime * pointsPerRemainingSecond);
         int pointsAwarded = baseGoalScore + timeBonus;
 
@@ -72,22 +165,24 @@ public class TimeScoreManager : MonoBehaviour
 
         Debug.Log($"Goal Reached! Base: {baseGoalScore} | Time Bonus: {timeBonus} (from {currentTime:F1}s left) | Awarded: {pointsAwarded} | Total Score: {currentTotalScore}");
 
-        // Reset the timer for the next goal
-        ResetTimer();
+        // Only reset timer if the game hasn't just been won
+        if (!IsGameFinished())
+        {
+            ResetTimer();
+        }
+        else
+        {
+            StopTimer();
+            DisableTimeBar();
+        }
     }
 
-    /// <summary>
-    /// Adds points to the total score and updates the UI text.
-    /// </summary>
     public void AddScore(int points)
     {
         currentTotalScore += points;
         UpdateScoreUI();
     }
 
-    /// <summary>
-    /// Updates the score UI display to strictly show the numerical value.
-    /// </summary>
     private void UpdateScoreUI()
     {
         if (scoreText != null)
@@ -96,9 +191,6 @@ public class TimeScoreManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Recalculates fill amount and updates the image color via the gradient.
-    /// </summary>
     private void UpdateTimerUI()
     {
         if (timeBarImage == null) return;
@@ -108,27 +200,24 @@ public class TimeScoreManager : MonoBehaviour
         timeBarImage.color = timeBarGradient.Evaluate(normalizedTime);
     }
 
-    /// <summary>
-    /// Resets the timer back to maximum time and starts counting down again.
-    /// </summary>
     public void ResetTimer()
     {
+        // Re-enable time bar image if it was previously hidden
+        if (timeBarImage != null && !timeBarImage.gameObject.activeSelf)
+        {
+            timeBarImage.gameObject.SetActive(true);
+        }
+
         currentTime = maxTime;
         isTimerRunning = true;
         UpdateTimerUI();
     }
 
-    /// <summary>
-    /// Stops the timer.
-    /// </summary>
     public void StopTimer()
     {
         isTimerRunning = false;
     }
 
-    /// <summary>
-    /// Returns the remaining time in seconds.
-    /// </summary>
     public float GetRemainingTime()
     {
         return currentTime;
@@ -136,6 +225,27 @@ public class TimeScoreManager : MonoBehaviour
 
     private void OnTimeExpired()
     {
-        Debug.Log("Time expired!");
+        if (IsGameFinished()) return;
+
+        Debug.Log("Time expired! Deducting life and respawning frog.");
+
+        if (LivesManager.Instance != null)
+        {
+            LivesManager.Instance.LoseLife();
+        }
+
+        if (frogController != null)
+        {
+            frogController.ResetFrog();
+        }
+
+        if (!IsGameFinished())
+        {
+            ResetTimer();
+        }
+        else
+        {
+            DisableTimeBar();
+        }
     }
 }

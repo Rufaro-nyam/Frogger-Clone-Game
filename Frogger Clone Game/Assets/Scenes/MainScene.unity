@@ -7245,6 +7245,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timeBarImage: {fileID: 154214923850563429}
   scoreText: {fileID: 7241956876927946336}
+  frogController: {fileID: 1563388598}
+  goalManager: {fileID: 1630741516}
   maxTime: 30
   timeBarGradient:
     serializedVersion: 2
