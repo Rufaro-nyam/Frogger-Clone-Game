@@ -31,9 +31,13 @@ public class FrogController : MonoBehaviour
     private Vector2 startWorldPosition;
     private Vector2 targetWorldPosition;
 
+    // Log tracking variables
     private bool isOnLog = false;
     private Transform currentLog = null;
     private Vector2 lastLogPosition = Vector2.zero;
+
+    // Cache the cell size
+    private float cellSize = 1f;
 
     public Vector2Int CurrentGridPosition => currentGridPosition;
     public bool IsMoving => isMoving;
@@ -47,6 +51,8 @@ public class FrogController : MonoBehaviour
             Debug.LogError("GridManager not found in the scene!");
             return;
         }
+
+        CalculateCellSize();
 
         if (goalManager == null)
         {
@@ -62,6 +68,18 @@ public class FrogController : MonoBehaviour
         SetFacing(Vector2Int.up);
 
         Debug.Log($"Frog initialized at grid position ({startX}, {startY})");
+    }
+
+    private void CalculateCellSize()
+    {
+        if (gridManager == null) return;
+
+        // Get two adjacent grid positions
+        Vector2 pos1 = gridManager.GetWorldPosition(0, 0);
+        Vector2 pos2 = gridManager.GetWorldPosition(1, 0);
+        cellSize = Vector2.Distance(pos1, pos2);
+
+        Debug.Log($"Cell size calculated: {cellSize}");
     }
 
     private void Update()
@@ -91,23 +109,55 @@ public class FrogController : MonoBehaviour
         if (direction == Vector2Int.zero)
             return;
 
-        Vector2Int newPosition = currentGridPosition + direction;
+        Vector2Int newGridPosition = currentGridPosition + direction;
 
-        if (IsValidGridPosition(newPosition))
+        if (isOnLog)
         {
-            StartJump(newPosition, direction);
+            // When on a log, jump from current world position (not grid aligned)
+            // Use cellSize for jump distance
+            Vector2 targetWorldPos = (Vector2)transform.position + new Vector2(direction.x, direction.y) * cellSize;
+
+            // Check if the target position is within the grid bounds
+            Vector2Int targetGrid = gridManager.GetGridPosition(targetWorldPos);
+            if (IsValidGridPosition(targetGrid))
+            {
+                // Detach from log and jump
+                isOnLog = false;
+                currentLog = null;
+
+                targetGridPosition = targetGrid;
+                startWorldPosition = transform.position;
+                targetWorldPosition = targetWorldPos;
+                SetFacing(direction);
+                isMoving = true;
+                moveTimer = 0f;
+
+                if (jumpSound != null)
+                    jumpSound.Play();
+
+                Debug.Log($"Frog jumping from world position ({startWorldPosition.x}, {startWorldPosition.y}) to ({targetWorldPos.x}, {targetWorldPos.y})");
+            }
+            else
+            {
+                Debug.Log($"Cannot jump to position - out of bounds");
+            }
         }
         else
         {
-            Debug.Log($"Cannot move to grid position ({newPosition.x}, {newPosition.y}) - out of bounds");
+            // Normal grid-based movement when not on log
+            if (IsValidGridPosition(newGridPosition))
+            {
+                StartJump(newGridPosition, direction);
+            }
+            else
+            {
+                Debug.Log($"Cannot move to grid position ({newGridPosition.x}, {newGridPosition.y}) - out of bounds");
+            }
         }
     }
 
     private void StartJump(Vector2Int targetGridPos, Vector2Int direction)
     {
-        isOnLog = false;
-        currentLog = null;
-
         targetGridPosition = targetGridPos;
         startWorldPosition = transform.position;
         targetWorldPosition = gridManager.GetWorldPosition(targetGridPos.x, targetGridPos.y);
@@ -139,6 +189,7 @@ public class FrogController : MonoBehaviour
 
     private void LateUpdate()
     {
+        // Move frog with log (if on log and not jumping)
         if (isOnLog && currentLog != null && !isMoving)
         {
             Vector2 currentLogPos = currentLog.position;
@@ -163,7 +214,24 @@ public class FrogController : MonoBehaviour
         if (progress >= 1f)
         {
             transform.position = targetWorldPosition;
-            currentGridPosition = targetGridPosition;
+
+            // Update grid position after landing
+            if (isOnLog)
+            {
+                // If on log, update grid position from world position
+                Vector2Int newGridPos = gridManager.GetGridPosition(transform.position);
+                if (IsValidGridPosition(newGridPos))
+                {
+                    currentGridPosition = newGridPos;
+                    targetGridPosition = newGridPos;
+                }
+            }
+            else
+            {
+                // Normal grid movement
+                currentGridPosition = targetGridPosition;
+            }
+
             isMoving = false;
             CheckLandingTile();
             Debug.Log($"Frog landed at grid position ({currentGridPosition.x}, {currentGridPosition.y})");
@@ -203,25 +271,19 @@ public class FrogController : MonoBehaviour
                 if (IsLogAtPosition(currentGridPosition))
                 {
                     Debug.Log("Frog landed on a log! Safe for now...");
-               
                     CheckIfOnLog();
-                
                 }
                 else
                 {
-                    // ===== ADDED: Detach from log in water =====
                     isOnLog = false;
                     currentLog = null;
-                  
                     HandleDeath("drowned in the river");
                 }
                 break;
 
             case GridPositionType.Goal:
-               
                 isOnLog = false;
                 currentLog = null;
-                
                 HandleGoalReached();
                 break;
         }
@@ -253,7 +315,7 @@ public class FrogController : MonoBehaviour
             currentLog = null;
         }
     }
-   
+
     private bool IsCarAtPosition(Vector2Int gridPos)
     {
         Vector2 worldPos = gridManager.GetWorldPosition(gridPos.x, gridPos.y);
@@ -318,7 +380,6 @@ public class FrogController : MonoBehaviour
         {
             Debug.Log($"Frog reached an empty goal slot at ({currentGridPosition.x}, {currentGridPosition.y})!");
 
-
             if (goalManager.FilledSlots >= goalManager.TotalSlots)
             {
                 // Tell LivesManager that player won (this prevents game over)
@@ -374,6 +435,8 @@ public class FrogController : MonoBehaviour
         }
 
         isMoving = false;
+        isOnLog = false;
+        currentLog = null;
         currentGridPosition = gridPos;
         targetGridPosition = gridPos;
         transform.position = gridManager.GetWorldPosition(gridPos.x, gridPos.y);
