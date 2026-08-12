@@ -409,7 +409,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 901652314}
   - {fileID: 463164960}
   - {fileID: 1541725490}
   - {fileID: 546692177}
@@ -426,6 +425,7 @@ Transform:
   - {fileID: 1511798288}
   - {fileID: 1376506673}
   - {fileID: 1244576306}
+  - {fileID: 901652314}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &64668544
@@ -1478,8 +1478,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d90f4b895c181834f946222d949b10e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  direction: 1
-  speed: 0.5
+  wrapOffset: 0.1
 --- !u!1 &406384593
 GameObject:
   m_ObjectHideFlags: 0
@@ -5377,6 +5376,52 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &1464653130
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1464653132}
+  - component: {fileID: 1464653131}
+  m_Layer: 0
+  m_Name: LogSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1464653131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1464653130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c9f8980323d29c428ab278fc3ebc3a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gridManager: {fileID: 1630741515}
+  logPrefab: {fileID: 6527888225777572885, guid: 745d7eb8c7fa16a469eeaba6e0673f0c, type: 3}
+--- !u!4 &1464653132
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1464653130}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1505659125
 GameObject:
   m_ObjectHideFlags: 0
@@ -6042,16 +6087,16 @@ MonoBehaviour:
     trafficSpeed: 2
   - laneType: 2
     positions: 020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000
-    trafficDirection: 1
-    trafficSpeed: 2
+    trafficDirection: -1
+    trafficSpeed: 3
+  - laneType: 2
+    positions: 020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000
+    trafficDirection: -1
+    trafficSpeed: 5
   - laneType: 2
     positions: 020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000
     trafficDirection: 1
-    trafficSpeed: 2
-  - laneType: 2
-    positions: 020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000
-    trafficDirection: 1
-    trafficSpeed: 2
+    trafficSpeed: 6
   - laneType: 2
     positions: 020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000
     trafficDirection: 1
@@ -8147,4 +8192,5 @@ SceneRoots:
   - {fileID: 2018435235}
   - {fileID: 1531191665}
   - {fileID: 486307447}
+  - {fileID: 1464653132}
   - {fileID: 56965994}
