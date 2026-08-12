@@ -11,5 +11,6 @@ public class GridRow
     [Header("Road Settings")]
     public int trafficDirection = 1;
     public float trafficSpeed = 2f;
+    public float spawnInterval = 3f;
 }  
 
