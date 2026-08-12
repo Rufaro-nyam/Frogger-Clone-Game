@@ -31,6 +31,10 @@ public class FrogController : MonoBehaviour
     private Vector2 startWorldPosition;
     private Vector2 targetWorldPosition;
 
+    private bool isOnLog = false;
+    private Transform currentLog = null;
+    private Vector2 lastLogPosition = Vector2.zero;
+
     public Vector2Int CurrentGridPosition => currentGridPosition;
     public bool IsMoving => isMoving;
 
@@ -101,6 +105,9 @@ public class FrogController : MonoBehaviour
 
     private void StartJump(Vector2Int targetGridPos, Vector2Int direction)
     {
+        isOnLog = false;
+        currentLog = null;
+
         targetGridPosition = targetGridPos;
         startWorldPosition = transform.position;
         targetWorldPosition = gridManager.GetWorldPosition(targetGridPos.x, targetGridPos.y);
@@ -132,6 +139,14 @@ public class FrogController : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (isOnLog && currentLog != null && !isMoving)
+        {
+            Vector2 currentLogPos = currentLog.position;
+            Vector2 logDelta = currentLogPos - lastLogPosition;
+            transform.position += (Vector3)logDelta;
+            lastLogPosition = currentLogPos;
+        }
+
         if (!isMoving)
             return;
 
@@ -174,26 +189,71 @@ public class FrogController : MonoBehaviour
         switch (tileType)
         {
             case GridPositionType.Safe:
+                CheckIfOnLog();
                 break;
 
             case GridPositionType.Road:
+                isOnLog = false;
+                currentLog = null;
                 if (IsCarAtPosition(currentGridPosition))
                     HandleDeath("hit by a car");
                 break;
 
             case GridPositionType.River:
                 if (IsLogAtPosition(currentGridPosition))
+                {
                     Debug.Log("Frog landed on a log! Safe for now...");
+               
+                    CheckIfOnLog();
+                
+                }
                 else
+                {
+                    // ===== ADDED: Detach from log in water =====
+                    isOnLog = false;
+                    currentLog = null;
+                  
                     HandleDeath("drowned in the river");
+                }
                 break;
 
             case GridPositionType.Goal:
+               
+                isOnLog = false;
+                currentLog = null;
+                
                 HandleGoalReached();
                 break;
         }
     }
 
+    private void CheckIfOnLog()
+    {
+        Vector2 worldPos = transform.position;
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(worldPos, 0.3f, logLayerMask);
+
+        bool foundLog = false;
+
+        foreach (Collider2D collider in hitColliders)
+        {
+            if (collider.CompareTag("Log"))
+            {
+                foundLog = true;
+                currentLog = collider.transform;
+                isOnLog = true;
+                lastLogPosition = currentLog.position;
+                Debug.Log("Frog is on a log!");
+                break;
+            }
+        }
+
+        if (!foundLog)
+        {
+            isOnLog = false;
+            currentLog = null;
+        }
+    }
+   
     private bool IsCarAtPosition(Vector2Int gridPos)
     {
         Vector2 worldPos = gridManager.GetWorldPosition(gridPos.x, gridPos.y);
@@ -223,6 +283,9 @@ public class FrogController : MonoBehaviour
     private void HandleDeath(string reason)
     {
         Debug.LogWarning($"Frog died - {reason}");
+
+        isOnLog = false;
+        currentLog = null;
 
         if (LivesManager.Instance != null)
         {
@@ -255,7 +318,7 @@ public class FrogController : MonoBehaviour
         {
             Debug.Log($"Frog reached an empty goal slot at ({currentGridPosition.x}, {currentGridPosition.y})!");
 
-           
+
             if (goalManager.FilledSlots >= goalManager.TotalSlots)
             {
                 // Tell LivesManager that player won (this prevents game over)
