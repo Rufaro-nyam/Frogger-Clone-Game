@@ -239,4 +239,14 @@ public class GridManager : MonoBehaviour
             }
         }
     }
+
+    public (float speed, int direction) GetLaneSettings(int y)
+    {
+        if (y < 0 || y >= rows.Length)
+        {
+            return (0f, 1);
+        }
+
+        return (rows[y].trafficSpeed, rows[y].trafficDirection);
+    }
 }
