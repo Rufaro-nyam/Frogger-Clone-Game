@@ -39,6 +39,12 @@ public class FrogController : MonoBehaviour
     // Cache the cell size
     private float cellSize = 1f;
 
+    private bool isDead = false;
+
+    [Header("Car Detection")]
+    [SerializeField] private float detectionRadius = 0.4f;
+    private Collider2D frogCollider;
+
     public Vector2Int CurrentGridPosition => currentGridPosition;
     public bool IsMoving => isMoving;
 
@@ -67,6 +73,22 @@ public class FrogController : MonoBehaviour
         transform.position = gridManager.GetWorldPosition(startX, startY);
         SetFacing(Vector2Int.up);
 
+        isDead = false;
+
+        // Get or add collider
+        frogCollider = GetComponent<Collider2D>();
+        if (frogCollider == null)
+        {
+            BoxCollider2D boxCollider = gameObject.AddComponent<BoxCollider2D>();
+            boxCollider.isTrigger = true;
+            boxCollider.size = new Vector2(0.6f, 0.6f);
+            frogCollider = boxCollider;
+        }
+        else
+        {
+            frogCollider.isTrigger = true;
+        }
+
         Debug.Log($"Frog initialized at grid position ({startX}, {startY})");
     }
 
@@ -74,7 +96,6 @@ public class FrogController : MonoBehaviour
     {
         if (gridManager == null) return;
 
-        // Get two adjacent grid positions
         Vector2 pos1 = gridManager.GetWorldPosition(0, 0);
         Vector2 pos2 = gridManager.GetWorldPosition(1, 0);
         cellSize = Vector2.Distance(pos1, pos2);
@@ -84,13 +105,18 @@ public class FrogController : MonoBehaviour
 
     private void Update()
     {
+        // Check for car collisions every frame (manual detection)
+        if (!isDead && !isMoving)
+        {
+            CheckForCarCollision();
+        }
+
         // Don't process input if moving, no gridManager, or game is over/won
-        if (isMoving || gridManager == null)
+        if (isMoving || gridManager == null || isDead)
             return;
 
         if (LivesManager.Instance != null)
         {
-            // Block input if game is over OR player has won
             if (LivesManager.Instance.IsGameOver || LivesManager.Instance.HasWon)
                 return;
         }
@@ -113,15 +139,11 @@ public class FrogController : MonoBehaviour
 
         if (isOnLog)
         {
-            // When on a log, jump from current world position (not grid aligned)
-            // Use cellSize for jump distance
             Vector2 targetWorldPos = (Vector2)transform.position + new Vector2(direction.x, direction.y) * cellSize;
 
-            // Check if the target position is within the grid bounds
             Vector2Int targetGrid = gridManager.GetGridPosition(targetWorldPos);
             if (IsValidGridPosition(targetGrid))
             {
-                // Detach from log and jump
                 isOnLog = false;
                 currentLog = null;
 
@@ -144,7 +166,6 @@ public class FrogController : MonoBehaviour
         }
         else
         {
-            // Normal grid-based movement when not on log
             if (IsValidGridPosition(newGridPosition))
             {
                 StartJump(newGridPosition, direction);
@@ -152,6 +173,44 @@ public class FrogController : MonoBehaviour
             else
             {
                 Debug.Log($"Cannot move to grid position ({newGridPosition.x}, {newGridPosition.y}) - out of bounds");
+            }
+        }
+    }
+
+    private void CheckForCarCollision()
+    {
+        // Use Physics2D.OverlapCircle to check for cars near the frog
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(
+            transform.position,
+            detectionRadius,
+            vehicleLayerMask
+        );
+
+        foreach (Collider2D collider in hitColliders)
+        {
+            if (collider.CompareTag("Car") || collider.CompareTag("Vehicle"))
+            {
+                Debug.Log($"Frog detected car nearby: {collider.name}");
+                HandleDeath("hit by a car");
+                break;
+            }
+        }
+    }
+ 
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (isDead)
+            return;
+
+        if (LivesManager.Instance != null && (LivesManager.Instance.IsGameOver || LivesManager.Instance.HasWon))
+            return;
+
+        if (((1 << other.gameObject.layer) & vehicleLayerMask) != 0)
+        {
+            if (other.CompareTag("Car") || other.CompareTag("Vehicle"))
+            {
+                Debug.Log($"Frog collided with {other.name}!");
+                HandleDeath("hit by a car");
             }
         }
     }
@@ -190,7 +249,7 @@ public class FrogController : MonoBehaviour
     private void LateUpdate()
     {
         // Move frog with log (if on log and not jumping)
-        if (isOnLog && currentLog != null && !isMoving)
+        if (isOnLog && currentLog != null && !isMoving && !isDead)
         {
             Vector2 currentLogPos = currentLog.position;
             Vector2 logDelta = currentLogPos - lastLogPosition;
@@ -198,7 +257,7 @@ public class FrogController : MonoBehaviour
             lastLogPosition = currentLogPos;
         }
 
-        if (!isMoving)
+        if (!isMoving || isDead)
             return;
 
         moveTimer += Time.deltaTime;
@@ -215,10 +274,8 @@ public class FrogController : MonoBehaviour
         {
             transform.position = targetWorldPosition;
 
-            // Update grid position after landing
             if (isOnLog)
             {
-                // If on log, update grid position from world position
                 Vector2Int newGridPos = gridManager.GetGridPosition(transform.position);
                 if (IsValidGridPosition(newGridPos))
                 {
@@ -228,7 +285,6 @@ public class FrogController : MonoBehaviour
             }
             else
             {
-                // Normal grid movement
                 currentGridPosition = targetGridPosition;
             }
 
@@ -249,6 +305,9 @@ public class FrogController : MonoBehaviour
 
     private void CheckLandingTile()
     {
+        if (isDead)
+            return;
+
         GridPositionType tileType = gridManager.GetPositionType(
             currentGridPosition.x,
             currentGridPosition.y
@@ -344,6 +403,11 @@ public class FrogController : MonoBehaviour
 
     private void HandleDeath(string reason)
     {
+        if (isDead)
+            return;
+
+        isDead = true;
+
         Debug.LogWarning($"Frog died - {reason}");
 
         isOnLog = false;
@@ -354,7 +418,6 @@ public class FrogController : MonoBehaviour
             LivesManager.Instance.LoseLife();
         }
 
-        // Only respawn if game is NOT over and player hasn't won
         if (LivesManager.Instance != null && !LivesManager.Instance.IsGameOver && !LivesManager.Instance.HasWon)
         {
             RespawnAtStart();
@@ -373,7 +436,6 @@ public class FrogController : MonoBehaviour
             return;
         }
 
-        // Try to fill the goal
         bool filledNewSlot = goalManager.TryFillGoal(currentGridPosition);
 
         if (filledNewSlot)
@@ -382,23 +444,18 @@ public class FrogController : MonoBehaviour
 
             if (goalManager.FilledSlots >= goalManager.TotalSlots)
             {
-                // Tell LivesManager that player won (this prevents game over)
                 if (LivesManager.Instance != null)
                 {
                     LivesManager.Instance.GameWon();
                 }
-
-                // Don't lose a life or respawn - game is won!
                 return;
             }
 
-            // Not all goals filled yet - lose a life and respawn
             if (LivesManager.Instance != null)
             {
                 LivesManager.Instance.LoseLife();
             }
 
-            // Only respawn if game is NOT over and player hasn't won
             if (LivesManager.Instance != null && !LivesManager.Instance.IsGameOver && !LivesManager.Instance.HasWon)
             {
                 RespawnAtStart();
@@ -406,7 +463,6 @@ public class FrogController : MonoBehaviour
         }
         else
         {
-            // Goal already filled - treat as death
             Debug.LogWarning($"Goal at ({currentGridPosition.x}, {currentGridPosition.y}) is already filled!");
             HandleDeath("landed on an already-filled goal slot");
         }
@@ -424,6 +480,7 @@ public class FrogController : MonoBehaviour
         int startY = 0;
         TeleportToGridPosition(new Vector2Int(startX, startY));
         SetFacing(Vector2Int.up);
+        isDead = false;
     }
 
     public void TeleportToGridPosition(Vector2Int gridPos)
@@ -440,6 +497,7 @@ public class FrogController : MonoBehaviour
         currentGridPosition = gridPos;
         targetGridPosition = gridPos;
         transform.position = gridManager.GetWorldPosition(gridPos.x, gridPos.y);
+        isDead = false;
 
         Debug.Log($"Frog teleported to grid position ({gridPos.x}, {gridPos.y})");
     }
@@ -450,5 +508,6 @@ public class FrogController : MonoBehaviour
         int startY = 0;
         TeleportToGridPosition(new Vector2Int(startX, startY));
         SetFacing(Vector2Int.up);
+        isDead = false;
     }
 }
