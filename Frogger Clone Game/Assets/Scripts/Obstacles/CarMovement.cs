@@ -3,7 +3,7 @@ using UnityEngine;
 public class CarMovement : MonoBehaviour
 {
     private GridManager gridManager;
-    [SerializeField] private float wrapOffset = 0.1f;
+    [SerializeField] private float wrapOffset = 1f;
 
     private float speed;
     private int direction;
