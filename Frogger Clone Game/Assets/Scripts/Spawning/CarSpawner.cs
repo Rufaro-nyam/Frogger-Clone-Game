@@ -34,12 +34,21 @@ public class CarSpawner : MonoBehaviour
         {
             lane.timer += Time.deltaTime;
 
-            float spawnInterval =
-                gridManager.GetLaneSettings(lane.y).spawnInterval;
+            var settings = gridManager.GetLaneSettings(lane.y);
 
-            if (lane.timer >= spawnInterval)
+            if (lane.timer >= lane.nextSpawnTime && lane.activeCars < settings.maxCars)
             {
                 SpawnCar(lane.y);
+
+                lane.activeCars++;
+
+                float variation = settings.spawnIntervalVariation;
+
+                lane.nextSpawnTime = Random.Range(
+                    settings.spawnInterval - variation,
+                    settings.spawnInterval + variation
+                );
+
                 lane.timer = 0f;
             }
         }
@@ -47,15 +56,31 @@ public class CarSpawner : MonoBehaviour
 
     private void SpawnCar(int y)
     {
-        int x = gridManager.width / 2;
+        var settings = gridManager.GetLaneSettings(y);
 
-        Vector2 spawnPosition = gridManager.GetWorldPosition(x, y);
+        float leftEdge = gridManager.GetWorldPosition(0, y).x;
+        float rightEdge = gridManager.GetWorldPosition(gridManager.width - 1, y).x;
 
-        GameObject car = Instantiate(
-            carPrefab,
-            spawnPosition,
-            Quaternion.identity
-        );
+        float spawnOffset = 1f;
+
+        float spawnX;
+
+        if (settings.direction > 0)
+        {
+            // Car is moving right, so enter from the left
+            spawnX = leftEdge - spawnOffset;
+        }
+        else
+        {
+            // Car is moving left, so enter from the right
+            spawnX = rightEdge + spawnOffset;
+        }
+
+        float spawnY = gridManager.GetWorldPosition(0, y).y;
+
+        Vector2 spawnPosition = new Vector2(spawnX, spawnY);
+
+        GameObject car = Instantiate(carPrefab, spawnPosition, Quaternion.identity);
 
         CarMovement carMovement = car.GetComponent<CarMovement>();
 
@@ -63,12 +88,7 @@ public class CarSpawner : MonoBehaviour
         {
             carMovement.SetGridManager(gridManager);
 
-            var settings = gridManager.GetLaneSettings(y);
-
-            carMovement.SetMovement(
-                settings.speed,
-                settings.direction
-            );
+            carMovement.SetMovement(settings.speed, settings.direction);
         }
     }
 }

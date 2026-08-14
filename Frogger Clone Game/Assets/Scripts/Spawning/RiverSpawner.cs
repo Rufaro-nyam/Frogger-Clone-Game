@@ -1,17 +1,17 @@
 using UnityEngine;
 
-public class RoadSpawner
+public class RiverSpawner
 {
     public int y;
     public float timer;
     public float nextSpawnTime;
-    public int activeCars;
+    public int activeLogs;
 
-    public RoadSpawner(int laneY)
+    public RiverSpawner(int laneY)
     {
         y = laneY;
         timer = 0f;
-        nextSpawnTime = 0f;
-        activeCars = 0;
+        nextSpawnTime = -1f;
+        activeLogs = 0;
     }
 }

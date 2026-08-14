@@ -6,6 +6,7 @@ public class LogSpawner : MonoBehaviour
 {
     [SerializeField] private GridManager gridManager;
     [SerializeField] private GameObject logPrefab;
+    private List<RiverSpawner> laneSpawners = new List<RiverSpawner>();
 
     [Header("Blue Frog Settings")]
     [SerializeField] private ExtraLifeFrog blueFrogPrefab;
@@ -32,7 +33,8 @@ public class LogSpawner : MonoBehaviour
             gridManager = FindObjectOfType<GridManager>();
         }
 
-        SpawnTestLogs();
+        CreateLaneSpawners();
+
         cooldownTimer = blueFrogInitialDelay;
         CalculateLeftEdge();
     }
@@ -49,6 +51,8 @@ public class LogSpawner : MonoBehaviour
 
     private void Update()
     {
+        UpdateLogSpawning();
+
         // Case 1: We have an active frog and it's still uncollected.
         if (currentBlueFrog != null && !currentBlueFrog.IsCollected())
         {
@@ -184,6 +188,90 @@ public class LogSpawner : MonoBehaviour
             }
 
             SpawnBlueFrogOnLog(log);
+        }
+    }
+
+    private void CreateLaneSpawners()
+    {
+        for (int y = 0; y < gridManager.height; y++)
+        {
+            if (gridManager.GetLaneType(y) != LaneType.River)
+            {
+                continue;
+            }
+
+            laneSpawners.Add(new RiverSpawner(y));
+        }
+    }
+
+    private void UpdateLogSpawning()
+    {
+        foreach (RiverSpawner lane in laneSpawners)
+        {
+            lane.timer += Time.deltaTime;
+
+            var settings = gridManager.GetLaneSettings(lane.y);
+
+            if (lane.nextSpawnTime < 0f)
+            {
+                lane.nextSpawnTime = Random.Range(
+                    Mathf.Max(0.1f, settings.logSpawnInterval - settings.logSpawnIntervalVariation), settings.logSpawnInterval + settings.logSpawnIntervalVariation);
+            }
+
+            if (lane.timer >= lane.nextSpawnTime &&
+                lane.activeLogs < settings.maxLogs)
+            {
+                SpawnLog(lane.y);
+
+                lane.activeLogs++;
+
+                float variation = settings.logSpawnIntervalVariation;
+
+                float minInterval = Mathf.Max(0.1f, settings.logSpawnInterval - variation);
+
+                float maxInterval = settings.logSpawnInterval + variation;
+
+                lane.nextSpawnTime = Random.Range(minInterval, maxInterval);
+
+                lane.timer = 0f;
+            }
+        }
+    }
+
+    private void SpawnLog(int y)
+    {
+        var settings = gridManager.GetLaneSettings(y);
+
+        float leftEdge = gridManager.GetWorldPosition(0, y).x;
+        float rightEdge = gridManager.GetWorldPosition(gridManager.width - 1, y).x;
+
+        float spawnOffset = 1f;
+
+        float spawnX;
+
+        if (settings.logDirection > 0)
+        {
+            // Log moving right so enter from the left
+            spawnX = leftEdge - spawnOffset;
+        }
+        else
+        {
+            spawnX = rightEdge + spawnOffset;
+        }
+
+        float spawnY = gridManager.GetWorldPosition(0, y).y;
+
+        Vector2 spawnPosition = new Vector2(spawnX, spawnY);
+
+        GameObject log = Instantiate(logPrefab, spawnPosition, Quaternion.identity);
+
+        LogMovement logMovement = log.GetComponent<LogMovement>();
+
+        if (logMovement != null)
+        {
+            logMovement.SetGridManager(gridManager);
+
+            logMovement.SetMovement(settings.logSpeed, settings.logDirection);
         }
     }
 }

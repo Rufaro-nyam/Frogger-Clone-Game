@@ -240,13 +240,17 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    public (float speed, int direction, float spawnInterval) GetLaneSettings(int y)
+    public (float speed, int direction, float spawnInterval, float spawnIntervalVariation,int maxCars, float logSpeed, int logDirection, float logSpawnInterval, float logSpawnIntervalVariation,int maxLogs) GetLaneSettings(int y)
     {
         if (y < 0 || y >= rows.Length)
         {
-            return (0f, 1, 0f);
+            return (0f, 1, 0f, 0f, 0, 0f, 1, 0f, 0f, 0);
         }
 
-        return (rows[y].trafficSpeed, rows[y].trafficDirection, rows[y].spawnInterval);
+        return (
+            rows[y].trafficSpeed, rows[y].trafficDirection, rows[y].spawnInterval, rows[y].spawnIntervalVariation, rows[y].maxCars,
+
+
+            rows[y].logSpeed, rows[y].logDirection, rows[y].logSpawnInterval, rows[y].logSpawnIntervalVariation, rows[y].maxLogs);
     }
 }
