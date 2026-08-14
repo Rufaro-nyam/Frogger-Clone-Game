@@ -125,6 +125,12 @@ public class ExtraLifeFrog : MonoBehaviour
         collected = true;
         isOnLog = false;
 
+        // Change the player's frog to blue
+        if (player != null)
+        {
+            player.SetBlueFrogColor();
+        }
+
         if (LivesManager.Instance != null)
         {
             LivesManager.Instance.AddLife(1);
@@ -137,7 +143,8 @@ public class ExtraLifeFrog : MonoBehaviour
         }
 
         ShowVisual(false);
-        Debug.Log("ExtraLifeFrog collected!");
+
+        Debug.Log("ExtraLifeFrog collected! Player is now blue.");
 
         Destroy(gameObject, 0.5f);
     }
