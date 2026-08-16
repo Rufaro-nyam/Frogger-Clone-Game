@@ -8,6 +8,16 @@ public class TimeScoreManager : MonoBehaviour
     [SerializeField] private Image timeBarImage;
     [SerializeField] private TextMeshProUGUI scoreText;
 
+    [Header("End Game UI References")]
+    [Tooltip("UI canvas/panel to enable if the player finishes with a score > 0.")]
+    [SerializeField] private GameObject winCanvasUI;
+
+    [Tooltip("Text component inside the Win Canvas to display only the numerical score.")]
+    [SerializeField] private TextMeshProUGUI winScoreText;
+
+    [Tooltip("UI canvas/panel to enable if the player finishes with 0 score.")]
+    [SerializeField] private GameObject gameOverUI;
+
     [Header("Game References")]
     [SerializeField] private FrogController frogController;
     [SerializeField] private GoalManager goalManager;
@@ -33,11 +43,16 @@ public class TimeScoreManager : MonoBehaviour
     // State tracking variables
     private int lastFilledSlots = 0;
     private Vector2Int lastFrogPosition;
+    private bool isGameEndHandled = false;
 
     public int CurrentTotalScore => currentTotalScore;
 
     private void Start()
     {
+        // Ensure end-game UI screens start inactive
+        if (winCanvasUI != null) winCanvasUI.SetActive(false);
+        if (gameOverUI != null) gameOverUI.SetActive(false);
+
         // Auto-find references if not set in Inspector
         if (frogController == null)
             frogController = FindObjectOfType<FrogController>();
@@ -65,6 +80,12 @@ public class TimeScoreManager : MonoBehaviour
                 StopTimer();
                 DisableTimeBar();
             }
+
+            if (!isGameEndHandled)
+            {
+                HandleEndGameUI();
+            }
+
             return; // Halt timer processing completely
         }
 
@@ -88,6 +109,50 @@ public class TimeScoreManager : MonoBehaviour
         }
 
         UpdateTimerUI();
+    }
+
+    /// <summary>
+    /// Evaluates score condition upon game finish and activates the appropriate UI panel.
+    /// </summary>
+    private void HandleEndGameUI()
+    {
+        isGameEndHandled = true;
+
+        if (currentTotalScore > 0)
+        {
+            // Player scored something -> Enable Win Canvas and display numerical score
+            if (winCanvasUI != null)
+            {
+                winCanvasUI.SetActive(true);
+            }
+
+            if (winScoreText != null)
+            {
+                winScoreText.text = currentTotalScore.ToString();
+            }
+
+            if (gameOverUI != null)
+            {
+                gameOverUI.SetActive(false);
+            }
+
+            Debug.Log($"TimeScoreManager: Game finished with {currentTotalScore} points. Enabling Win Canvas UI.");
+        }
+        else
+        {
+            // Player scored nothing -> Enable Game Over UI
+            if (gameOverUI != null)
+            {
+                gameOverUI.SetActive(true);
+            }
+
+            if (winCanvasUI != null)
+            {
+                winCanvasUI.SetActive(false);
+            }
+
+            Debug.Log("TimeScoreManager: Game finished with 0 points. Enabling Game Over UI.");
+        }
     }
 
     /// <summary>
@@ -174,6 +239,10 @@ public class TimeScoreManager : MonoBehaviour
         {
             StopTimer();
             DisableTimeBar();
+            if (!isGameEndHandled)
+            {
+                HandleEndGameUI();
+            }
         }
     }
 
@@ -225,7 +294,14 @@ public class TimeScoreManager : MonoBehaviour
 
     private void OnTimeExpired()
     {
-        if (IsGameFinished()) return;
+        if (IsGameFinished())
+        {
+            if (!isGameEndHandled)
+            {
+                HandleEndGameUI();
+            }
+            return;
+        }
 
         Debug.Log("Time expired! Deducting life and respawning frog.");
 
@@ -246,6 +322,10 @@ public class TimeScoreManager : MonoBehaviour
         else
         {
             DisableTimeBar();
+            if (!isGameEndHandled)
+            {
+                HandleEndGameUI();
+            }
         }
     }
 }
