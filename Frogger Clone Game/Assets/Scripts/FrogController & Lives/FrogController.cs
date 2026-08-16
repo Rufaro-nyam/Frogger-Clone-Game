@@ -510,7 +510,7 @@ public class FrogController : MonoBehaviour
 
                 // Check whether the log has carried the frog
                 // beyond the board.
-                CheckHorizontalBoundary();
+                //CheckHorizontalBoundary();
 
                 if (isDead)
                     return;
@@ -566,7 +566,7 @@ public class FrogController : MonoBehaviour
         transform.position =
             currentPosition;
 
-        CheckHorizontalBoundary();
+        //CheckHorizontalBoundary();
 
         if (isDead)
             return;
@@ -624,56 +624,56 @@ public class FrogController : MonoBehaviour
         }
     }
 
-    private void CheckHorizontalBoundary()
-    {
-        if (gridManager == null ||
-            isDead)
-        {
-            return;
-        }
+    //private void CheckHorizontalBoundary()
+    //{
+    //    if (gridManager == null ||
+    //        isDead)
+    //    {
+    //        return;
+    //    }
 
-        float leftEdge =
-            gridManager.GetWorldPosition(
-                0,
-                0
-            ).x;
+    //    float leftEdge =
+    //        gridManager.GetWorldPosition(
+    //            0,
+    //            0
+    //        ).x;
 
-        float rightEdge =
-            gridManager.GetWorldPosition(
-                gridManager.width - 1,
-                0
-            ).x;
-
-
-        if (frogCollider != null)
-        {
-            float frogLeft =
-                frogCollider.bounds.min.x;
-
-            float frogRight =
-                frogCollider.bounds.max.x;
+    //    float rightEdge =
+    //        gridManager.GetWorldPosition(
+    //            gridManager.width - 1,
+    //            0
+    //        ).x;
 
 
-            if (frogRight < leftEdge ||
-                frogLeft > rightEdge)
-            {
-                HandleDeath(
-                    "frog went beyond the left/right edge of the grid"
-                );
-            }
-        }
-        else
-        {
-            // Fallback if the collider doesn't exist.
-            if (transform.position.x < leftEdge ||
-                transform.position.x > rightEdge)
-            {
-                HandleDeath(
-                    "frog went beyond the left/right edge of the grid"
-                );
-            }
-        }
-    }
+    //    if (frogCollider != null)
+    //    {
+    //        float frogLeft =
+    //            frogCollider.bounds.min.x;
+
+    //        float frogRight =
+    //            frogCollider.bounds.max.x;
+
+
+    //        if (frogRight < leftEdge ||
+    //            frogLeft > rightEdge)
+    //        {
+    //            HandleDeath(
+    //                "frog went beyond the left/right edge of the grid"
+    //            );
+    //        }
+    //    }
+    //    else
+    //    {
+    //        // Fallback if the collider doesn't exist.
+    //        if (transform.position.x < leftEdge ||
+    //            transform.position.x > rightEdge)
+    //        {
+    //            HandleDeath(
+    //                "frog went beyond the left/right edge of the grid"
+    //            );
+    //        }
+    //    }
+    //}
 
 
     private bool IsValidGridPosition(
