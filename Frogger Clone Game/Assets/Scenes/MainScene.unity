@@ -5561,15 +5561,15 @@ MonoBehaviour:
   - laneType: 1
     positions: 010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
     trafficDirection: -1
-    trafficSpeed: 2
+    trafficSpeed: 1.5
     spawnInterval: 3
     spawnIntervalVariation: 2
-    maxCars: 2
+    maxCars: 3
     logDirection: 1
-    logSpeed: 1
-    logSpawnInterval: 3
+    logSpeed: 2
+    logSpawnInterval: 2
     logSpawnIntervalVariation: 1
-    maxLogs: 2
+    maxLogs: 4
   - laneType: 1
     positions: 010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
     trafficDirection: -1
@@ -5597,7 +5597,7 @@ MonoBehaviour:
   - laneType: 1
     positions: 010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
     trafficDirection: -1
-    trafficSpeed: 7
+    trafficSpeed: 6
     spawnInterval: 1
     spawnIntervalVariation: 1
     maxCars: 1
@@ -5609,7 +5609,7 @@ MonoBehaviour:
   - laneType: 1
     positions: 010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
     trafficDirection: 1
-    trafficSpeed: 5
+    trafficSpeed: 8
     spawnInterval: 3
     spawnIntervalVariation: 1
     maxCars: 2
@@ -5638,7 +5638,7 @@ MonoBehaviour:
     spawnIntervalVariation: 0
     maxCars: 2
     logDirection: 1
-    logSpeed: 6
+    logSpeed: 7
     logSpawnInterval: 2
     logSpawnIntervalVariation: 0
     maxLogs: 2
@@ -5650,10 +5650,10 @@ MonoBehaviour:
     spawnIntervalVariation: 1
     maxCars: 4
     logDirection: -1
-    logSpeed: 2
-    logSpawnInterval: 4
+    logSpeed: 3
+    logSpawnInterval: 2
     logSpawnIntervalVariation: 1
-    maxLogs: 3
+    maxLogs: 4
   - laneType: 2
     positions: 020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000
     trafficDirection: -1
@@ -5663,7 +5663,7 @@ MonoBehaviour:
     maxCars: 2
     logDirection: -1
     logSpeed: 4
-    logSpawnInterval: 7
+    logSpawnInterval: 3
     logSpawnIntervalVariation: 1
     maxLogs: 3
   - laneType: 2
@@ -5674,10 +5674,10 @@ MonoBehaviour:
     spawnIntervalVariation: 1
     maxCars: 2
     logDirection: 1
-    logSpeed: 5
+    logSpeed: 6
     logSpawnInterval: 2
     logSpawnIntervalVariation: 1
-    maxLogs: 3
+    maxLogs: 2
   - laneType: 2
     positions: 020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000
     trafficDirection: 1
@@ -5687,9 +5687,9 @@ MonoBehaviour:
     maxCars: 4
     logDirection: 1
     logSpeed: 3
-    logSpawnInterval: 3
+    logSpawnInterval: 2
     logSpawnIntervalVariation: 1
-    maxLogs: 4
+    maxLogs: 3
   - laneType: 3
     positions: 020000000300000002000000020000000300000002000000020000000300000002000000020000000300000002000000020000000300000002000000
     trafficDirection: 1
