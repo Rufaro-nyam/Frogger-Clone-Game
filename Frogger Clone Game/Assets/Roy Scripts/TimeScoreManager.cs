@@ -8,12 +8,18 @@ public class TimeScoreManager : MonoBehaviour
     [SerializeField] private Image timeBarImage;
     [SerializeField] private TextMeshProUGUI scoreText;
 
+    [Tooltip("Text component to display the numerical count of frogs that reached the end during gameplay.")]
+    [SerializeField] private TextMeshProUGUI frogsCountText;
+
     [Header("End Game UI References")]
     [Tooltip("UI canvas/panel to enable if the player finishes with a score > 0.")]
     [SerializeField] private GameObject winCanvasUI;
 
     [Tooltip("Text component inside the Win Canvas to display only the numerical score.")]
     [SerializeField] private TextMeshProUGUI winScoreText;
+
+    [Tooltip("Text component inside the Win Canvas to display only the numerical count of rescued frogs.")]
+    [SerializeField] private TextMeshProUGUI winFrogsCountText;
 
     [Tooltip("UI canvas/panel to enable if the player finishes with 0 score.")]
     [SerializeField] private GameObject gameOverUI;
@@ -40,12 +46,16 @@ public class TimeScoreManager : MonoBehaviour
     private bool isTimerRunning = false;
     private int currentTotalScore = 0;
 
+    // Frog tracking
+    private int frogsReachedCount = 0;
+
     // State tracking variables
     private int lastFilledSlots = 0;
     private Vector2Int lastFrogPosition;
     private bool isGameEndHandled = false;
 
     public int CurrentTotalScore => currentTotalScore;
+    public int FrogsReachedCount => frogsReachedCount;
 
     private void Start()
     {
@@ -67,6 +77,7 @@ public class TimeScoreManager : MonoBehaviour
             lastFrogPosition = frogController.CurrentGridPosition;
 
         UpdateScoreUI();
+        UpdateFrogsUI();
         ResetTimer();
     }
 
@@ -120,7 +131,7 @@ public class TimeScoreManager : MonoBehaviour
 
         if (currentTotalScore > 0)
         {
-            // Player scored something -> Enable Win Canvas and display numerical score
+            // Player scored something -> Enable Win Canvas and display numerical values
             if (winCanvasUI != null)
             {
                 winCanvasUI.SetActive(true);
@@ -131,12 +142,17 @@ public class TimeScoreManager : MonoBehaviour
                 winScoreText.text = currentTotalScore.ToString();
             }
 
+            if (winFrogsCountText != null)
+            {
+                winFrogsCountText.text = frogsReachedCount.ToString();
+            }
+
             if (gameOverUI != null)
             {
                 gameOverUI.SetActive(false);
             }
 
-            Debug.Log($"TimeScoreManager: Game finished with {currentTotalScore} points. Enabling Win Canvas UI.");
+            Debug.Log($"TimeScoreManager: Game finished with {currentTotalScore} points and {frogsReachedCount} frogs. Enabling Win Canvas UI.");
         }
         else
         {
@@ -217,18 +233,22 @@ public class TimeScoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Awards score for reaching a goal slot and resets the timer for the next run.
+    /// Awards score for reaching a goal slot, increments the rescued frog count, and resets the timer for the next run.
     /// </summary>
     public void ReachGoal()
     {
         if (!isTimerRunning) return;
+
+        // Increment frog counter
+        frogsReachedCount++;
+        UpdateFrogsUI();
 
         int timeBonus = Mathf.FloorToInt(currentTime * pointsPerRemainingSecond);
         int pointsAwarded = baseGoalScore + timeBonus;
 
         AddScore(pointsAwarded);
 
-        Debug.Log($"Goal Reached! Base: {baseGoalScore} | Time Bonus: {timeBonus} (from {currentTime:F1}s left) | Awarded: {pointsAwarded} | Total Score: {currentTotalScore}");
+        Debug.Log($"Goal Reached! Frogs Saved: {frogsReachedCount} | Base: {baseGoalScore} | Time Bonus: {timeBonus} (from {currentTime:F1}s left) | Total Score: {currentTotalScore}");
 
         // Only reset timer if the game hasn't just been won
         if (!IsGameFinished())
@@ -257,6 +277,19 @@ public class TimeScoreManager : MonoBehaviour
         if (scoreText != null)
         {
             scoreText.text = currentTotalScore.ToString();
+        }
+    }
+
+    private void UpdateFrogsUI()
+    {
+        if (frogsCountText != null)
+        {
+            frogsCountText.text = frogsReachedCount.ToString();
+        }
+
+        if (winFrogsCountText != null)
+        {
+            winFrogsCountText.text = frogsReachedCount.ToString();
         }
     }
 
