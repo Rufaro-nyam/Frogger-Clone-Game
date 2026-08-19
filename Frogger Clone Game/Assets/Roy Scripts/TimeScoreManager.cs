@@ -83,7 +83,16 @@ public class TimeScoreManager : MonoBehaviour
 
     private void Update()
     {
-        // 1. Check if the game state is over (Win or Game Over)
+        // Debug key for goal testing
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ReachGoal();
+        }
+
+        // Process pending events FIRST (so the 5th goal increment happens before handling win UI)
+        DetectPlayerEvents();
+
+        // Check if the game state is over (Win or Game Over)
         if (IsGameFinished())
         {
             if (isTimerRunning)
@@ -99,14 +108,6 @@ public class TimeScoreManager : MonoBehaviour
 
             return; // Halt timer processing completely
         }
-
-        // Debug key for goal testing
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            ReachGoal();
-        }
-
-        DetectPlayerEvents();
 
         if (!isTimerRunning) return;
 
@@ -237,9 +238,7 @@ public class TimeScoreManager : MonoBehaviour
     /// </summary>
     public void ReachGoal()
     {
-        if (!isTimerRunning) return;
-
-        // Increment frog counter
+        // Increment frog counter regardless of timer state
         frogsReachedCount++;
         UpdateFrogsUI();
 
